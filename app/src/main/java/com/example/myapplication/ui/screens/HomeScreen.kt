@@ -168,7 +168,7 @@ fun HomeScreen(
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = "今天天气晴，就上涩涩的配我吧",
+                                text = "今天天气晴，就来陪我玩吧",
                                 fontSize = 12.sp,
                                 color = Color.Gray
                             )
