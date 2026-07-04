@@ -1,0 +1,41 @@
+# Moimoi 快速安装指南
+
+## 方法1：使用USB安装（最简单）
+
+1. 手机连接到电脑（USB线）
+2. 打开终端，运行：
+
+cd /Users/zhangxuetao/miaow/miaowapp
+adb install -r app/build/outputs/apk/debug/app-debug.apk
+
+3. 安装完成！在手机上找到"moimoi"应用打开即可
+
+---
+
+## 方法2：直接复制文件
+
+1. APK文件位置：
+/Users/zhangxuetao/miaow/miaowapp/app/build/outputs/apk/debug/app-debug.apk
+
+2. 复制到手机（任意方式）：
+   - USB传输
+   - 微信发送给自己
+   - QQ发送给自己
+   - 上传网盘下载
+
+3. 在手机上点击安装
+
+---
+
+## 如果安装失败：
+
+手机需要开启"USB调试"：
+1. 进入「设置」→「关于手机」
+2. 连续点击「版本号」7次（开启开发者模式）
+3. 返回「设置」→「系统」→「开发者选项」
+4. 打开「USB调试」
+
+---
+
+APK大小：32 MB
+支持系统：Android 10及以上
