@@ -107,10 +107,31 @@ object WidgetHelper {
 
     private fun downloadBitmap(url: String): Bitmap? {
         return try {
+            Log.d("WidgetHelper", "Downloading image from: $url")
             val conn = URL(url).openConnection()
-            conn.connectTimeout = 15_000
-            conn.readTimeout = 20_000
-            BitmapFactory.decodeStream(conn.getInputStream())
+            conn.connectTimeout = 30_000
+            conn.readTimeout = 30_000
+            val originalBitmap = BitmapFactory.decodeStream(conn.getInputStream())
+
+            if (originalBitmap == null) {
+                Log.e("WidgetHelper", "Failed to decode bitmap")
+                return null
+            }
+
+            Log.d("WidgetHelper", "Original bitmap size: ${originalBitmap.width}x${originalBitmap.height}")
+
+            // 小组件压缩到更小尺寸 (600px宽度足够)
+            val maxWidth = 600
+            if (originalBitmap.width > maxWidth) {
+                val scale = maxWidth.toFloat() / originalBitmap.width
+                val newHeight = (originalBitmap.height * scale).toInt()
+                val scaled = Bitmap.createScaledBitmap(originalBitmap, maxWidth, newHeight, true)
+                originalBitmap.recycle()
+                Log.d("WidgetHelper", "Compressed bitmap to: ${scaled.width}x${scaled.height}")
+                scaled
+            } else {
+                originalBitmap
+            }
         } catch (e: Exception) {
             Log.e("WidgetHelper", "Failed to download bitmap", e)
             null

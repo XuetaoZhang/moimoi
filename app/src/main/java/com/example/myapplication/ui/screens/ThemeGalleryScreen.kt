@@ -14,11 +14,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
+import coil.request.ImageRequest
+import coil.size.Scale
 import com.example.myapplication.ui.Screen
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -28,6 +31,7 @@ fun ThemeGalleryScreen(
     generatedImages: List<String>,
     onThemeSelected: (Int) -> Unit
 ) {
+    val context = LocalContext.current
     val pagerState = rememberPagerState(pageCount = { generatedImages.size })
     var selectedIndex by remember { mutableStateOf(0) }
 
@@ -87,7 +91,13 @@ fun ThemeGalleryScreen(
                                 .background(getThemeColor(page))
                         ) {
                             Image(
-                                painter = rememberAsyncImagePainter(generatedImages[page]),
+                                painter = rememberAsyncImagePainter(
+                                    model = ImageRequest.Builder(context)
+                                        .data(generatedImages[page])
+                                        .crossfade(true)
+                                        .scale(Scale.FIT)
+                                        .build()
+                                ),
                                 contentDescription = null,
                                 modifier = Modifier.fillMaxSize(),
                                 contentScale = ContentScale.Crop

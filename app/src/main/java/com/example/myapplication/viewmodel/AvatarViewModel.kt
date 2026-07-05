@@ -99,15 +99,17 @@ class AvatarViewModel : ViewModel() {
             "雪后林间木屋，覆雪松枝，窗内暖黄灯光，冬日柔光，静谧治愈氛围，暖白棕褐色调",
             "黄昏海滨沙滩，天际橙粉晚霞渐变，落日柔光，浪漫静谧氛围，粉紫暖调"
         )
-        val selectedScene = scenes.random()
+        val randomIndex = (0..5).random()
+        val selectedScene = scenes[randomIndex]
+        Log.d("AvatarVM", "随机选择场景[$randomIndex]: ${selectedScene.take(20)}...")
 
         val tasks = listOf(
-            // 竖图1：站立姿态，用于桌面壁纸
-            Triple("站立微笑", "1024x1792", "自然站立，面向正前方，开心微笑，角色居中偏下，背景：$selectedScene"),
-            // 竖图2：挥手姿态，用于锁屏壁纸
-            Triple("挥手打招呼", "1024x1792", "举起一只手挥手打招呼，笑容灿烂，角色居中偏下，背景：$selectedScene"),
-            // 方图：睡觉姿态，用于小组件
-            Triple("侧卧睡觉", "1024x1024", "侧卧睡觉，眼睛微闭，表情安详可爱，角色居中，背景：$selectedScene")
+            // 竖图1：站立姿态，用于桌面壁纸 (720x1280 已验证支持)
+            Triple("站立微笑", "720x1280", "自然站立，面向正前方，开心微笑，角色居中偏下，背景：$selectedScene"),
+            // 竖图2：挥手姿态，用于锁屏壁纸 (720x1280 已验证支持)
+            Triple("挥手打招呼", "720x1280", "举起一只手挥手打招呼，笑容灿烂，角色居中偏下，背景：$selectedScene"),
+            // 横图：睡觉姿态，用于小组件 (800x600 已验证支持)
+            Triple("侧卧睡觉", "800x600", "侧卧睡觉，眼睛微闭，表情安详可爱，角色居中，背景：$selectedScene")
         )
 
         val urls = mutableListOf<String>()
@@ -118,7 +120,6 @@ class AvatarViewModel : ViewModel() {
                 "严格保留原照片中的外貌特征（毛色/肤色/发型/五官/表情），" +
                 "姿态与场景：$postureDesc，高质量插画，角色清晰突出。"
             val request = ImageGenRequest(
-                model = "grok-imagine-image-quality",
                 prompt = prompt,
                 image = base64Image,
                 n = 1,
