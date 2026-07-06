@@ -40,6 +40,10 @@ class AvatarViewModel : ViewModel() {
     private val _progressText = MutableStateFlow("准备中...")
     val progressText: StateFlow<String> = _progressText
 
+    // 生成进度百分比 (0-100)
+    private val _progressPercent = MutableStateFlow(0)
+    val progressPercent: StateFlow<Int> = _progressPercent
+
     fun setSelectedImage(uri: Uri) {
         _selectedImageUri.value = uri
         // 重置上次生成结果
@@ -62,12 +66,14 @@ class AvatarViewModel : ViewModel() {
             _isLoading.value = true
             _generationError.value = null
             _generatedImages.value = emptyList()
+            _progressPercent.value = 5
 
             try {
                 _progressText.value = "正在读取照片..."
                 val base64Image = ImageUtils.uriToBase64(context, uri)
                     ?: throw Exception("照片读取失败，请重新选择")
 
+                _progressPercent.value = 15
                 _progressText.value = "AI 正在生成专属形象（1/3）..."
                 val imageUrls = generateQVersionImages(base64Image)
 
@@ -75,6 +81,7 @@ class AvatarViewModel : ViewModel() {
                     throw Exception("未能获取生成图片，请重试")
                 }
 
+                _progressPercent.value = 100
                 _progressText.value = "生成成功！"
                 _generatedImages.value = imageUrls
                 Log.d("AvatarVM", "Generated ${imageUrls.size} images")
@@ -115,7 +122,8 @@ class AvatarViewModel : ViewModel() {
         val urls = mutableListOf<String>()
         for ((idx, task) in tasks.withIndex()) {
             val (postureName, size, postureDesc) = task
-            _progressText.value = "AI 正在生成专属形象（${idx + 1}/3）：$postureName..."
+            _progressText.value = "AI 正在生成第 ${idx + 1} 张 · $postureName"
+            _progressPercent.value = 15 + (idx * 28)
             val prompt = "根据提供的照片，生成一个Q版卡通形象：大头小身Q版风格，头身比3:1，圆润可爱，" +
                 "严格保留原照片中的外貌特征（毛色/肤色/发型/五官/表情），" +
                 "姿态与场景：$postureDesc，高质量插画，角色清晰突出。"
@@ -130,6 +138,7 @@ class AvatarViewModel : ViewModel() {
             val url = response.data.firstOrNull()?.url
                 ?: response.data.firstOrNull()?.b64Json?.let { "data:image/png;base64,$it" }
             if (url != null) urls.add(url)
+            _progressPercent.value = 15 + ((idx + 1) * 28)
         }
         return urls
     }

@@ -1,5 +1,6 @@
 package com.example.myapplication.ui.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -10,16 +11,23 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
+import coil.compose.rememberAsyncImagePainter
+import coil.request.ImageRequest
+import com.example.myapplication.R
 import com.example.myapplication.ui.Screen
-import com.example.myapplication.utils.IconHelper
 import com.example.myapplication.utils.WallpaperHelper
 import com.example.myapplication.utils.WidgetHelper
-import kotlinx.coroutines.launch
+import com.example.myapplication.ui.theme.*
 
 @Composable
 fun SuccessScreen(
@@ -27,134 +35,236 @@ fun SuccessScreen(
     selectedImageUrl: String = "",
     generatedImages: List<String> = emptyList()
 ) {
-    val scope = rememberCoroutineScope()
     val context = LocalContext.current
 
     var isApplying by remember { mutableStateOf(false) }
     var applyResult by remember { mutableStateOf<String?>(null) }
 
-    // 进入即自动分配3张图：图1桌面/图2锁屏/图3小组件
     LaunchedEffect(generatedImages) {
         if (generatedImages.size >= 3 && applyResult == null) {
-            android.util.Log.d("SuccessScreen", "开始应用3张图，数量: ${generatedImages.size}")
             isApplying = true
-            val homeImg = generatedImages[0]   // 竖图1 → 桌面
-            val lockImg = generatedImages[1]   // 竖图2 → 锁屏
-            val widgetImg = generatedImages[2] // 方图 → 小组件
-
-            android.util.Log.d("SuccessScreen", "Widget图片URL: $widgetImg")
+            val homeImg = generatedImages[0]
+            val lockImg = generatedImages[1]
+            val widgetImg = generatedImages[2]
 
             val homeOk = WallpaperHelper.setWallpaperFromUrl(context, homeImg)
             val lockOk = WallpaperHelper.setLockScreenWallpaper(context, lockImg)
             WidgetHelper.saveAvatarAndUpdateWidget(context, widgetImg)
 
-            applyResult = if (homeOk && lockOk) "✓ 桌面、锁屏、小组件已同步" else "部分设置失败"
+            applyResult = if (homeOk && lockOk) "桌面、锁屏、小组件已同步" else "部分设置失败"
             isApplying = false
-        } else if (generatedImages.isNotEmpty()) {
-            android.util.Log.w("SuccessScreen", "图片数量不足: ${generatedImages.size}")
         }
     }
 
+    SuccessScreenContent(
+        isApplying = isApplying,
+        applyResult = applyResult,
+        generatedImageUrl = generatedImages.getOrNull(2),
+        onBackToHome = {
+            navController.navigate(Screen.Companion.route) {
+                popUpTo(Screen.Upload.route) { inclusive = true }
+            }
+        }
+    )
+}
+
+@Composable
+private fun SuccessScreenContent(
+    isApplying: Boolean,
+    applyResult: String?,
+    generatedImageUrl: String?,
+    onBackToHome: () -> Unit,
+) {
+    val context = LocalContext.current
     Box(
-        modifier = Modifier.fillMaxSize().background(Color(0xFFFFF5F5)),
-        contentAlignment = Alignment.Center
+        modifier = Modifier
+            .fillMaxSize()
+            .background(BgCream)
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-            modifier = Modifier.padding(horizontal = 32.dp)
-        ) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            // 顶部 logo
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp, vertical = 20.dp)
+                    .padding(top = 20.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "moimoi",
+                    fontSize = 26.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = TextDark
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 32.dp)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        if (isApplying) "正在同步到系统..." else "设置成功！",
+                        fontSize = 26.sp, fontWeight = FontWeight.Bold, color = TextDark
+                    )
+                    if (!isApplying) {
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Icon(
+                            painter = painterResource(R.drawable.ic_heart),
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp),
+                            tint = PrimaryCoral
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    if (isApplying) "桌面、锁屏、小组件设置中..." else "Ta 会一直陪伴着你哦~",
+                    fontSize = 14.sp,
+                    color = TextGray
+                )
+            }
+
+            Spacer(modifier = Modifier.height(36.dp))
+
+            // 圆形装饰
             Box(
-                modifier = Modifier.size(120.dp).clip(CircleShape).background(Color(0xFFFFB4A2)),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 40.dp),
                 contentAlignment = Alignment.Center
             ) {
-                if (isApplying) {
-                    CircularProgressIndicator(Modifier.size(60.dp), color = Color.White, strokeWidth = 5.dp)
-                } else {
-                    Text("✓", fontSize = 64.sp, color = Color.White, fontWeight = FontWeight.Bold)
+                Box(
+                    modifier = Modifier
+                        .size(240.dp)
+                        .clip(CircleShape)
+                        .background(BgCard),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (isApplying) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(72.dp),
+                            color = PrimaryCoral,
+                            strokeWidth = 5.dp
+                        )
+                    } else if (generatedImageUrl != null) {
+                        Image(
+                            painter = rememberAsyncImagePainter(
+                                model = ImageRequest.Builder(context)
+                                    .data(generatedImageUrl)
+                                    .crossfade(true)
+                                    .build()
+                            ),
+                            contentDescription = null,
+                            modifier = Modifier
+                                .size(200.dp)
+                                .clip(CircleShape),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
                 }
             }
 
-            Spacer(Modifier.height(32.dp))
-
-            Text(
-                text = if (isApplying) "正在同步到系统..." else "同步成功！",
-                fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color(0xFF8B4513)
-            )
-            Spacer(Modifier.height(10.dp))
-            Text(
-                text = if (isApplying) "桌面、锁屏、小组件设置中..." else "他已经住进你的手机里啦~",
-                fontSize = 15.sp, color = Color.Gray
-            )
-
-            if (applyResult != null) {
-                Spacer(Modifier.height(10.dp))
-                Text(applyResult!!, fontSize = 13.sp, color = Color(0xFF4CAF50))
-            }
-
-            Spacer(Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(28.dp))
 
             if (!isApplying) {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF0E6))
+                // 小贴士卡片
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 32.dp)
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(BgCard)
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.Top
                 ) {
-                    Column(Modifier.padding(16.dp)) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_bulb),
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp),
+                        tint = Color.Unspecified
+                    )
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            "📌 添加桌面小组件",
-                            fontWeight = FontWeight.Bold, fontSize = 15.sp, color = Color(0xFF8B4513)
+                            "小贴士",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = TextDark
                         )
-                        Spacer(Modifier.height(6.dp))
+                        Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            "长按桌面空白处 → 小组件 → 找到 moimoi → 拖到桌面",
-                            fontSize = 13.sp, color = Color.Gray
+                            "长按桌面空白处 → 小组件 → 找到 moimoi → 拖到桌面即可添加陪伴小组件哦~",
+                            fontSize = 12.sp,
+                            color = TextGray,
+                            lineHeight = 18.sp
                         )
                     }
                 }
 
-                Spacer(Modifier.height(14.dp))
-
-                var shortcutDone by remember { mutableStateOf(false) }
-                var shortcutRunning by remember { mutableStateOf(false) }
-                OutlinedButton(
-                    onClick = {
-                        if (!shortcutDone) scope.launch {
-                            shortcutRunning = true
-                            IconHelper.createCommonAppShortcuts(context, selectedImageUrl)
-                            shortcutDone = true
-                            shortcutRunning = false
-                        }
-                    },
-                    enabled = !shortcutRunning && !shortcutDone,
-                    modifier = Modifier.fillMaxWidth().height(48.dp),
-                    shape = RoundedCornerShape(24.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF8B4513))
-                ) {
-                    if (shortcutRunning) {
-                        CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp, color = Color(0xFF8B4513))
-                    } else {
-                        Text(
-                            if (shortcutDone) "✓ 快捷方式已创建" else "创建桌面图标快捷方式（可选）",
-                            fontSize = 13.sp
-                        )
-                    }
+                if (applyResult != null) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = "✓ $applyResult",
+                        fontSize = 12.sp,
+                        color = PrimaryCoral,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 32.dp),
+                        textAlign = TextAlign.Center
+                    )
                 }
-
-                Spacer(Modifier.height(16.dp))
             }
+
+            Spacer(modifier = Modifier.weight(1f))
 
             Button(
-                onClick = {
-                    navController.navigate(Screen.Home.route) {
-                        popUpTo(Screen.Home.route) { inclusive = true }
-                    }
-                },
-                modifier = Modifier.fillMaxWidth().height(56.dp),
+                onClick = onBackToHome,
+                enabled = !isApplying,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 32.dp)
+                    .height(56.dp),
                 shape = RoundedCornerShape(28.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF8B4513))
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = PrimaryCoral,
+                    disabledContainerColor = Color.LightGray.copy(alpha = 0.5f)
+                )
             ) {
-                Text("返回首页", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                Text(
+                    text = if (isApplying) "同步中..." else "去看看",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
             }
+
+            Spacer(modifier = Modifier.height(40.dp))
         }
     }
+}
+
+@Preview(showBackground = true, widthDp = 360, heightDp = 780)
+@Composable
+private fun SuccessScreenPreview() {
+    SuccessScreenContent(
+        isApplying = false,
+        applyResult = "桌面、锁屏、小组件已同步",
+        generatedImageUrl = "https://placeholder.com/200x200",
+        onBackToHome = {}
+    )
+}
+
+@Preview(showBackground = true, widthDp = 360, heightDp = 780)
+@Composable
+private fun SuccessScreenApplyingPreview() {
+    SuccessScreenContent(
+        isApplying = true,
+        applyResult = null,
+        generatedImageUrl = null,
+        onBackToHome = {}
+    )
 }

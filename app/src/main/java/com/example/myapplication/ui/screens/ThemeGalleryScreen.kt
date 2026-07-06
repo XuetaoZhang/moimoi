@@ -15,98 +15,135 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import coil.size.Scale
+import com.example.myapplication.R
 import com.example.myapplication.ui.Screen
+import com.example.myapplication.ui.theme.*
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ThemeGalleryScreen(
     navController: NavController,
     generatedImages: List<String>,
-    onThemeSelected: (Int) -> Unit
+    onThemeSelected: (Int) -> Unit,
+    onRegenerate: () -> Unit = {},
 ) {
     val context = LocalContext.current
     val pagerState = rememberPagerState(pageCount = { generatedImages.size })
-    var selectedIndex by remember { mutableStateOf(0) }
 
+    ThemeGalleryContent(
+        generatedImages = generatedImages,
+        pagerState = pagerState,
+        onImageRequest = { url ->
+            ImageRequest.Builder(context)
+                .data(url)
+                .crossfade(true)
+                .scale(Scale.FIT)
+                .build()
+        },
+        onRegenerate = onRegenerate,
+        onApply = {
+            onThemeSelected(pagerState.currentPage)
+            navController.navigate(Screen.Apply.route)
+        }
+    )
+}
+
+@Composable
+private fun ThemeGalleryContent(
+    generatedImages: List<String>,
+    pagerState: androidx.compose.foundation.pager.PagerState,
+    onImageRequest: (String) -> Any,
+    onRegenerate: () -> Unit,
+    onApply: () -> Unit,
+) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFFFF5F5))
+            .background(BgCream)
     ) {
         Column(
             modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            TopAppBar(
-                title = { Text("主题画廊", fontSize = 20.sp, fontWeight = FontWeight.Bold) },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent
+            // 顶部 logo
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp, vertical = 20.dp)
+                    .padding(top = 20.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "moimoi",
+                    fontSize = 26.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = TextDark
                 )
-            )
+            }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-            Text(
-                text = "专属主题",
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF8B4513)
-            )
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 32.dp),
+                horizontalAlignment = Alignment.Start
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("你的专属萌宠已生成！", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = TextDark)
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Icon(
+                        painter = painterResource(R.drawable.ic_heart),
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp),
+                        tint = PrimaryCoral
+                    )
+                }
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    "快来看看吧~",
+                    fontSize = 14.sp,
+                    color = TextGray
+                )
+            }
 
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = "为您的 AI 伴侣挑上一件二三的装扮。",
-                fontSize = 14.sp,
-                color = Color.Gray
-            )
-
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
             if (generatedImages.isNotEmpty()) {
                 HorizontalPager(
                     state = pagerState,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(400.dp),
+                        .height(420.dp),
                     contentPadding = PaddingValues(horizontal = 40.dp)
                 ) { page ->
-                    Card(
+                    Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(8.dp),
-                        shape = RoundedCornerShape(24.dp),
-                        elevation = CardDefaults.cardElevation(8.dp)
+                            .padding(8.dp)
+                            .clip(RoundedCornerShape(28.dp))
+                            .background(BgCard),
                     ) {
-                        Box(
+                        Image(
+                            painter = rememberAsyncImagePainter(model = onImageRequest(generatedImages[page])),
+                            contentDescription = null,
                             modifier = Modifier
                                 .fillMaxSize()
-                                .background(getThemeColor(page))
-                        ) {
-                            Image(
-                                painter = rememberAsyncImagePainter(
-                                    model = ImageRequest.Builder(context)
-                                        .data(generatedImages[page])
-                                        .crossfade(true)
-                                        .scale(Scale.FIT)
-                                        .build()
-                                ),
-                                contentDescription = null,
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop
-                            )
-                        }
+                                .clip(RoundedCornerShape(28.dp)),
+                            contentScale = ContentScale.Crop
+                        )
                     }
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -116,11 +153,11 @@ fun ThemeGalleryScreen(
                         Box(
                             modifier = Modifier
                                 .padding(4.dp)
-                                .size(8.dp)
+                                .size(if (pagerState.currentPage == index) 10.dp else 8.dp)
                                 .clip(CircleShape)
                                 .background(
-                                    if (pagerState.currentPage == index) Color(0xFF8B4513)
-                                    else Color.LightGray
+                                    if (pagerState.currentPage == index) PrimaryCoral
+                                    else TextGray.copy(alpha = 0.35f)
                                 )
                         )
                     }
@@ -129,45 +166,51 @@ fun ThemeGalleryScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(400.dp),
+                        .height(420.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("暂无生成的图片", color = Color.Gray)
+                    Text("暂无生成的图片", color = TextGray)
                 }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // 重新生成按钮 (小)
+            OutlinedButton(
+                onClick = onRegenerate,
+                modifier = Modifier
+                    .padding(horizontal = 32.dp)
+                    .height(44.dp),
+                shape = RoundedCornerShape(22.dp),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = TextDark)
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_refresh),
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp),
+                    tint = TextDark
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text("重新生成", fontSize = 13.sp)
             }
 
             Spacer(modifier = Modifier.weight(1f))
 
-            Row(
+            // 主按钮
+            Button(
+                onClick = onApply,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 40.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                ThemeTag("🕐", "时光素材")
-                ThemeTag("🏺", "古金古玩")
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            Button(
-                onClick = {
-                    selectedIndex = pagerState.currentPage
-                    onThemeSelected(selectedIndex)
-                    navController.navigate(Screen.Success.route)
-                },
-                modifier = Modifier
-                    .width(180.dp)
+                    .padding(horizontal = 32.dp)
                     .height(56.dp),
                 shape = RoundedCornerShape(28.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF8B4513)
-                )
+                colors = ButtonDefaults.buttonColors(containerColor = PrimaryCoral)
             ) {
                 Text(
-                    text = "⭐ 点击应用",
+                    text = "下一步：应用陪伴",
                     fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
                 )
             }
 
@@ -176,29 +219,15 @@ fun ThemeGalleryScreen(
     }
 }
 
+@Preview(showBackground = true, widthDp = 360, heightDp = 780)
 @Composable
-fun ThemeTag(emoji: String, label: String) {
-    Surface(
-        shape = RoundedCornerShape(20.dp),
-        color = Color.White,
-        modifier = Modifier.padding(4.dp)
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(text = emoji, fontSize = 16.sp)
-            Spacer(modifier = Modifier.width(4.dp))
-            Text(text = label, fontSize = 14.sp, color = Color(0xFF8B4513))
-        }
-    }
-}
-
-fun getThemeColor(index: Int): Color {
-    val colors = listOf(
-        Color(0xFFB8E6D5),
-        Color(0xFFFFE4E1),
-        Color(0xFFE6E6FA)
+private fun ThemeGalleryPreview() {
+    val pagerState = rememberPagerState(pageCount = { 3 })
+    ThemeGalleryContent(
+        generatedImages = listOf("", "", ""),
+        pagerState = pagerState,
+        onImageRequest = { it },
+        onRegenerate = {},
+        onApply = {}
     )
-    return colors[index % colors.size]
 }

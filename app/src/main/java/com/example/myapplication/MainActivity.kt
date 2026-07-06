@@ -17,6 +17,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.myapplication.ui.Screen
 import com.example.myapplication.ui.screens.*
 import com.example.myapplication.ui.theme.MyApplicationTheme
+import com.example.myapplication.utils.WidgetHelper
 import com.example.myapplication.viewmodel.AvatarViewModel
 
 class MainActivity : ComponentActivity() {
@@ -42,24 +43,21 @@ fun MoimoiApp() {
     val viewModel: AvatarViewModel = viewModel()
     val context = LocalContext.current
 
-    val avatars by viewModel.avatars.collectAsState()
     val generatedImages by viewModel.generatedImages.collectAsState()
     val selectedImageUrl by viewModel.selectedImageUrl.collectAsState()
+    val selectedImageUri by viewModel.selectedImageUri.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val progressText by viewModel.progressText.collectAsState()
+    val progressPercent by viewModel.progressPercent.collectAsState()
     val generationError by viewModel.generationError.collectAsState()
+
+    val hasAvatar = remember { WidgetHelper.getAvatarBitmap(context) != null }
+    val startDestination = if (hasAvatar) Screen.Companion.route else Screen.Upload.route
 
     NavHost(
         navController = navController,
-        startDestination = Screen.Home.route
+        startDestination = startDestination
     ) {
-        composable(Screen.Home.route) {
-            HomeScreen(
-                navController = navController,
-                avatars = avatars
-            )
-        }
-
         composable(Screen.Upload.route) {
             UploadScreen(
                 navController = navController,
@@ -68,7 +66,6 @@ fun MoimoiApp() {
         }
 
         composable(Screen.Loading.route) {
-            // 进入此页面时触发真实 API 调用（只触发一次）
             LaunchedEffect(Unit) {
                 viewModel.generateAvatarImages(context)
             }
@@ -76,9 +73,10 @@ fun MoimoiApp() {
             LoadingScreen(
                 isLoading = isLoading,
                 progressText = progressText,
+                progressPercent = progressPercent,
+                selectedImageUri = selectedImageUri,
                 error = generationError,
                 onComplete = {
-                    // 只有 isLoading=false 且 error=null 才会触发，确保有图片后再跳转
                     if (generatedImages.isNotEmpty()) {
                         navController.navigate(Screen.ThemeGallery.route) {
                             popUpTo(Screen.Loading.route) { inclusive = true }
@@ -98,7 +96,15 @@ fun MoimoiApp() {
             ThemeGalleryScreen(
                 navController = navController,
                 generatedImages = generatedImages,
-                onThemeSelected = { index -> viewModel.saveAvatar(index) }
+                onThemeSelected = { index -> viewModel.saveAvatar(index) },
+                onRegenerate = { viewModel.generateAvatarImages(context) }
+            )
+        }
+
+        composable(Screen.Apply.route) {
+            ApplyScreen(
+                navController = navController,
+                generatedImages = generatedImages
             )
         }
 
@@ -110,11 +116,8 @@ fun MoimoiApp() {
             )
         }
 
-        composable(Screen.SystemIntegration.route) {
-            SystemIntegrationScreen(
-                navController = navController,
-                selectedImageUrl = selectedImageUrl
-            )
+        composable(Screen.Companion.route) {
+            CompanionScreen(navController = navController)
         }
     }
 }
