@@ -68,8 +68,8 @@ interface OpenAIApi {
 // ── Singleton ─────────────────────────────────────────────────────────
 
 object OpenAIService {
-    const val BASE_URL = "https://api.zqch5.cn/"
-    const val API_KEY = "sk-lwH0TyYpJzbEAU7JV6KPbeEr9UyOT7EuMifKiA8ahFcLrrfo"
+    const val BASE_URL = "YOUR-BASE_URL"
+    const val API_KEY = "YOUR-API_KEY"
 
     private val client = OkHttpClient.Builder()
         .addInterceptor { chain ->

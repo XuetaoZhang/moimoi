@@ -402,13 +402,7 @@ adb install app/build/outputs/apk/debug/app-debug.apk
 
 ## 📞 API配置信息
 
-```kotlin
-Base URL: https://api.openai-next.com/
-API Key: sk-07J0p9ER0VGTcUdB228a699e6e07444bB43544CdCfA840D9
-Model: gpt-image-1
-```
-
-已在 `OpenAIService.kt` 中硬编码，无需额外配置。
+已在 `OpenAIService.kt` 中使用自己的API Key。
 
 ---
 

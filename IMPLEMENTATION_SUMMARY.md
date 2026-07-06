@@ -152,8 +152,8 @@ class AvatarWallpaperService : WallpaperService() {
 ## 📝 API配置（已完成）
 
 ```kotlin
-Base URL: https://api.openai-next.com/
-API Key: sk-07J0p9ER0VGTcUdB228a699e6e07444bB43544CdCfA840D9
+Base URL: YOUR_API_URL
+API Key: YOUR_API_KEY
 Model: gpt-image-1
 ```
 

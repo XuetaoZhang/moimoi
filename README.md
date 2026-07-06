@@ -152,13 +152,6 @@ app/src/main/java/com/example/myapplication/
 <uses-permission android:name="android.permission.SET_WALLPAPER" />
 ```
 
-## API配置
-
-已在代码中配置：
-- Base URL: `https://api.openai-next.com/`
-- API Key: `sk-07J0p9ER0VGTcUdB228a699e6e07444bB43544CdCfA840D9`
-- Model: `gpt-image-1`
-
 ## 演示流程
 
 1. 启动应用 -> 看到空白形象卡片
